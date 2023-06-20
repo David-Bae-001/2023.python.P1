@@ -103,10 +103,12 @@ def initGame( ) :
      rocks.append((rockA, dy))
   rockWidth = 4
   rockHeight = 10
+  # 전투기 초기 위치( x, y )
   x = padWidth * 0.45
   y = padHeight * 0.9
   fighterX = 0
   fighterY = 0
+  
 """* 게임플레이 구현부 *"""
 
 # 첫 화면( 시놉시스 ) 구현
@@ -120,14 +122,14 @@ def runStory( ) :
   
   # 한국 글씨 폰트 적용
   font_path = './font/12Bold.ttf'
-  font_size = 30
+  font_size = 40
   korean_font = pygame.font.Font(font_path, font_size)
   
   
   # 시놉시스
   text_lines = ["미래의 지구,", "외계인의 침공이", "시작되었다.", "외계인은", "이미 지구 내에", "깊숙이 침투했고", "전 인류는 ", "모든 기술력을 모아 ", "‘STEP-1호기’를 ", "완성하고 마는데...", "‘STEP-1호기’로 ", "지구 안에 침투한 ", "외계인들을 ", "모두 물리치자."]
   text_positions = [(padWidth // 2, padHeight + korean_font.get_height() * i) for i in range(len(text_lines))]
-  text_speed = 1
+  text_speed = 1.3
   
   # 프레임 조정을 위한 시간 추가
   clock = pygame.time.Clock()
@@ -179,12 +181,22 @@ def runMenu( ) :
     background = pygame.image.load( './images/background1.png' )
     background2 = pygame.image.load( './images/background1.png' )
     drawObject( background, 0, 0 )  # 배경 화면 그리기
-    text = 'press any key'
-    textfont = pygame.font.Font( './images/NanumGothic.ttf', 80 )
-    text = textfont.render( text, True, ( 255, 0, 0 ) )
-    textpos = text.get_rect( )
-    textpos.center = ( padWidth / 2, padHeight / 2 )
-    gamePad.blit( text, textpos )
+    text1 = 'press any key'
+    text2 = '* k : keyboard mode '
+    text3 = '* m : mouse mode '
+    textfont = pygame.font.Font( './images/NanumGothic.ttf', 40 )
+    text1 = textfont.render( text1, True, ( 255, 255, 255 ) )
+    text2 = textfont.render( text2, True, ( 255, 255, 255 ) )
+    text3 = textfont.render( text3, True, ( 255, 255, 255 ) )
+    textpos1 = text1.get_rect( )
+    textpos1.center = ( padWidth / 2, padHeight / 2 - 50 )
+    textpos2 = text2.get_rect( )
+    textpos2.center = ( padWidth / 2, padHeight / 2  )
+    textpos3 = text3.get_rect( )
+    textpos3.center = ( padWidth / 2, padHeight / 2 + 50 )
+    gamePad.blit( text1, textpos1 )
+    gamePad.blit( text2, textpos2 )
+    gamePad.blit( text3, textpos3 )
     pygame.display.update( )
     while True :
       for event in pygame.event.get( ) :
@@ -193,10 +205,15 @@ def runMenu( ) :
           sys.exit( )
         if event.type == pygame.KEYDOWN :
           start_time = time.time()
-          runGame( )
+          if event.key == pygame.K_k : # k 누르면 키보드 모드
+            runGame_keyboard( )
+          if event.key == pygame.K_m : # m 누르면 마우스 모드
+            runGame_mouse( )
+          else:                        # 다른키 누르면 default( 키보드 모드 )로 시작
+            runGame_keyboard( )
 
 # 게임 플레이 구현
-def runGame( ) :
+def runGame_keyboard( ) :
   global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
   global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
   global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy,rocks, rock, rockA
@@ -233,14 +250,19 @@ def runGame( ) :
             missileXY.append(missileA)
         if event.key == pygame.K_q:   # q 눌렀을 때 모든 운석 없애기
           if gaugeValue == 100 :
-            for rockA in rocks :
-                rockGen()
-            shotCount += 1
+            shotCount += len(rocks)
+            rocks = []
+            rockappear = random.randint(2, 5)
+            for i in range (rockappear) :
+               rockA = rock.get_rect(left=random.randint(0, padWidth - rock.get_width()), top=-30)
+               dy = random.randint(1, 2)
+               rocks.append((rockA, dy))
+            rockWidth = 4
+            rockHeight = 10
             gaugeValue = 0
 
           else :
             gaugeValue = gaugeValue
-      
       
       # 대각선 방향 이동 추가
       elif event.type == pygame.KEYUP :
@@ -264,9 +286,168 @@ def runGame( ) :
     drawObject( background,  0, background_y )
     drawObject( background2, 0, background2_y )     
 
+    #게임시간이 3초가 되면 다음 화면으로 넘어감( 일단 중간에 왕 나오는 배경 3초씩 )
+    gametime = int(time.time()-start_time)
+    if gametime > 3 and gametime < 7 :
+      background = pygame.image.load( './images/background0.png' )
+      background2 = background.copy()
+    elif gametime > 6 and gametime < 10 :
+      background = pygame.image.load( './images/background2.png' )
+      background2 = background.copy()
+    elif gametime > 9 and gametime < 13 :
+      background = pygame.image.load( './images/background0.png' )
+      background2 = background.copy()
+    elif gametime > 12 and gametime < 16 :
+      background = pygame.image.load( './images/background3.png' )
+      background2 = background.copy()
+      
+   # 비행기를 게임 화면의 ( x, y ) 좌표에 그리기
+    x += fighterX
+    if x < 0 :
+      x = 0
+    elif x > padWidth:
+      x = padWidth
+    
+    y += fighterY
+    if y < 0 :
+      y = 0
+    elif y > padHeight-30:
+      y = padHeight-30
+      
+    #운석 그리기
+    rockAngle = 0
+    rockAngle += 1  # 추가: 운석의 회전 속도
+    if rockAngle >= 360:
+        rockAngle = 0
+
+    for rockA, dy in rocks:
+        rockA.top += dy
+        if rockA.top > padHeight:
+            rockGen()
+            rockPassed += 1
+            
+        if rockPassed == 5 : # 운석 5개 놓치면 게임오버
+            gameOver( )
+            
+        for missileA in missileXY:
+            missileA.top -= 5
+            if missileA.top < 0:
+                missileXY.remove(missileA)
+            
+    # 미사일 발사 화면에 그리기
+    for rockA, dy in rocks:
+        for missileA in missileXY:
+            if missileA.colliderect(rockA):
+                    missileXY.remove(missileA)
+                    gamePad.blit(explosion, (rockA.left, rockA.top))
+                    rocks.remove((rockA, dy))
+                    rockGen()
+                    shotCount += 1
+                    destroySound.play()
+                    gaugeValue += 10
+                    if gaugeValue > 100 :
+                        gaugeValue = 100
+  
+    for rockA, dy in rocks:
+        if rockA.colliderect(fighter.get_rect(left=x,top=y)):
+            gameOver()
+        
+    for rockA, dy in rocks:
+      gamePad.blit(rock, rockA)
+      
+    for missileA in missileXY:
+      gamePad.blit(missile, missileA)
+
+    drawObject(fighter, x, y)
+    
+    destroySound = pygame.mixer.Sound( random.choice( explosionSound ) )
+    writeScore( shotCount )
+      
+    # 놓친 운석 수 표시
+    writePassed( rockPassed )
+    
+    #운석 그리기
+    pygame.draw.rect(gamePad, (255, 0, 0), (gaugeX, gaugeY, gaugeWidth, gaugeHeight), border_radius=3)  # Red gauge bar
+    
+    pygame.draw.rect(gamePad, (0, 255, 0), (gaugeX, gaugeY, gaugeWidth * (gaugeValue / 100), gaugeHeight), border_radius=50)  # Green gauge bar based on gaugeValue
+    useSkill(gaugeValue) 
+    pygame.display.update( )  # 게임 화면을 다시 그림
+    
+    
+    gamePad.fill( BLACK )  # 게임 화면 ( 검은색 )
+    
+    clock.tick( 80 )  # 게임화면의 초당 프레임수를 60으로 설정
+    
+  pygame.quit( )  # pygame 종료
+  
+# 마우스 플레이 구현
+def runGame_mouse( ) :
+  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
+  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
+  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy,rocks, rock, rockA
+  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY ,fighterA
+    
+  # 움직이는 배경이미지을 위한 변수 선언
+  # 화면은 Top, Left 좌표는 (0,0)로 background2_y 는 0 아래쪽 마이너스 좌표에 위치해야 함
+  background_y  = 0
+  background2_y = -background_height
+  
+  destroySound = pygame.mixer.Sound( random.choice( explosionSound ) )  # 파괴될 때마다 다른 사운드 선택
+  
+  onGame = False
+  shotCount = 0
+  rockPassed = 0
+  mouse_x=padWidth/2
+  mouse_y=620
+
+  while not onGame :
+    for event in pygame.event.get( ) :
+      if event.type in [ pygame.QUIT ] :  # 게임 프로그램 종료
+        pygame.quit( )
+        sys.exit( )
+        
+      if event.type == pygame.MOUSEMOTION:
+          mouse_x = event.pos[0]
+          mouse_y = event.pos[1]
+
+          
+      if event.type == pygame.MOUSEBUTTONDOWN :
+          if event.button == 1 :
+              missileSound.play( )  # 미사일 사운드 재생
+              missileA = missile.get_rect(centerx=mouse_x, top=mouse_y)
+              missileXY.append(missileA)
+          elif event.button == 3 :
+            if gaugeValue == 100 :
+              shotCount += len(rocks)
+              rocks = []
+              rockappear = random.randint(2, 5)
+              for i in range (rockappear) :
+                 rockA = rock.get_rect(left=random.randint(0, padWidth - rock.get_width()), top=-30)
+                 dy = random.randint(1, 2)
+                 rocks.append((rockA, dy))
+              rockWidth = 4
+              rockHeight = 10
+              gaugeValue = 0
+
+
+    # 움직이는 배경 화면 좌표값 변경 
+    background_y  += background_speed
+    background2_y += background_speed
+    
+    if ( background_y == background_height ) :
+        background_y =  -background_height
+        
+    if ( background2_y == background_height ) :
+        background2_y = -background_height
+      
+    # 배경 화면 그리기        
+    #drawObject( background, 0, 0 )  
+    drawObject( background,  0, background_y )
+    drawObject( background2, 0, background2_y )     
+
     
     # 운석 맞춘 점수 표시
-    '''
+    
     #게임시간이 3초가 되면 다음 화면으로 넘어감( 일단 중간에 왕 나오는 배경 3초씩 )
     gametime = int(time.time()-start_time)
     if gametime > 3 and gametime < 7 :
@@ -281,24 +462,11 @@ def runGame( ) :
     if gametime > 12 and gametime < 16 :
       background = pygame.image.load( './images/background3.png' )
       background2 = background.copy()
-      '''
+      
    # 비행기를 게임 화면의 ( x, y ) 좌표에 그리기
-    x += fighterX
-    if x < 0 :
-      x = 0
-    elif x > padWidth:
-      x = padWidth
-    
-    y += fighterY
-    if y < 0 :
-      y = 0
-    elif y > padHeight-30:
-      y = padHeight-30
+
     #운석 그리기
-    rockAngle = 0
-    rockAngle += 1  # 추가: 운석의 회전 속도 DJ
-    if rockAngle >= 360:
-        rockAngle = 0
+
 
     for rockA, dy in rocks:
         rockA.top += dy
@@ -324,12 +492,13 @@ def runGame( ) :
                     rockGen()
                     shotCount += 1
                     destroySound.play()
+                    
                     gaugeValue += 10
                     if gaugeValue > 100 :
                         gaugeValue = 100
   
     for rockA, dy in rocks:
-        if rockA.colliderect(fighter.get_rect(left=x,top=y)):
+        if rockA.colliderect(fighter.get_rect(left=mouse_x, top=mouse_y)):
             gameOver()
 
 
@@ -340,7 +509,9 @@ def runGame( ) :
     for missileA in missileXY:
       gamePad.blit(missile, missileA)
 
-    drawObject(fighter, x, y)
+    gamePad.blit(fighter, ( mouse_x-30, mouse_y))
+    pygame.mouse.set_visible(0)
+    #print(fighterA)
     
     destroySound = pygame.mixer.Sound( random.choice( explosionSound ) )
     writeScore( shotCount )
@@ -385,10 +556,6 @@ def crash( ) :
     
     writeMessage( '전투기 파괴!' )
     
-    #종료시 게임순위 및 등록   
-    game = Ranking() 
-    game.showRanking( shotCount )   
-    
 # 게임 오버 메시지 출력
 def gameOver( ) :
     global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
@@ -397,10 +564,6 @@ def gameOver( ) :
     global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
     
     writeMessage( '게임 오버!' )
-    
-    #종료시 게임순위 및 등록   
-    game = Ranking() 
-    game.showRanking( shotCount )   
     
 # 게임 메시지 출력
 def writeMessage( text ) :
@@ -419,8 +582,12 @@ def writeMessage( text ) :
     gameOverSound.play()  # 게임 오버 사운드 재생
     sleep( 2 )
     pygame.mixer.music.play( -1 )
-    game = Ranking() 
-    game.showRanking( shotCount )
+    
+    #종료시 게임순위 및 등록( 0점 이상일 때)
+    if shotCount > 0 :
+      game = Ranking() 
+      game.showRanking( shotCount )
+    
     initGame( )
     runMenu( )
   
