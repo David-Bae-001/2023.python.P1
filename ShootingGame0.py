@@ -17,7 +17,7 @@ from time import sleep
 BLACK = ( 0, 0, 0 )
 padWidth = 480  # 게임화면의 가로크기
 padHeight = 640  # 게임화면의 세로크기
-background_height = padHeight  # 움직이는 배경 변수 선언 ( dean )
+background_height = padHeight  # 움직이는 배경 변수 선언 
 rockImage = [ 'rock01.png', 'rock02.png', 'rock03.png', 'rock04.png', 'rock05.png', \
               'rock06.png', 'rock07.png', 'rock08.png', 'rock09.png', 'rock10.png', \
               'rock11.png', 'rock12.png', 'rock13.png', 'rock14.png', 'rock15.png', \
@@ -33,13 +33,14 @@ def drawObject( obj, x, y ) :
   global gamePad
   gamePad.blit( obj, ( x, y ) )
   
+# 게임시작시 게임 초기화
 def initGame( ) :
   global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, gameOverSound
   pygame.init( )
   gamePad = pygame.display.set_mode( ( padWidth, padHeight ) )
   pygame.display.set_caption( 'PyShooting' )  # 게임 이름
-  background = pygame.image.load( 'background.png' )  # 배경 그림
-  background2 = background.copy()  # 움직이는 배경위한 소스추가( dean )
+  background = pygame.image.load( 'background2.png' )  # 배경 그림 1, 2, 3
+  background2 = background.copy()  # 움직이는 배경위한 소스추가
   fighter = pygame.image.load( 'fighter.png' ) # 전투기 그림
   missile = pygame.image.load( 'missile.png' )  # 미사일 그림
   explosion = pygame.image.load( 'explosion.png' )  # 폭발 그림
@@ -49,10 +50,18 @@ def initGame( ) :
   gameOverSound = pygame.mixer.Sound('gameover.wav')  # 게임 오버 사운드
   clock = pygame.time.Clock( )
 
+# 본게임 시작
 def runGame( ) :
   global gamePad, clock, background, background2, fighter, missile, explosion, missileSound
   
   missileXY = []  # 무기 좌표 리스트
+  
+  # 게이지 표시
+  gaugeWidth = 100
+  gaugeHeight = 10
+  gaugeX = padWidth / 2 - gaugeWidth / 2
+  gaugeY = padHeight - gaugeHeight - 10
+  gaugeValue = 0
   
   # 운석 랜덤 생성
   rock = pygame.image.load( random.choice( rockImage ) ) 
@@ -65,6 +74,8 @@ def runGame( ) :
   rockX = random.randrange( 0, ( padWidth - rockWidth ) )
   rockY = 0
   rockSpeed = 2
+  rockAngle = 0 # DJ
+  rockDirection = random.choice([-1, 1])  # Randomly select initial horizontal direction (-1 for left, 1 for right) DJ
   
   # 전투기 크기
   fighterSize = fighter.get_rect().size
@@ -77,7 +88,7 @@ def runGame( ) :
   fighterX = 0
   fighterY = 0
   
-  # 움직이는 배경이미지을 위한 변수 선언( Dean )
+  # 움직이는 배경이미지을 위한 변수 선언
   # 화면은 Top, Left 좌표는 (0,0)로 background2_y 는 0 아래쪽 마이너스 좌표에 위치해야 함
   background_y  = 0
   background2_y = -background_height
@@ -125,9 +136,9 @@ def runGame( ) :
           fighterY = 0
       """
       
-    # 움직이는 배경 화면 좌표값 변경 ( dean )  
-    background_y  += 2
-    background2_y += 2
+    # 움직이는 배경 화면 좌표값 변경 
+    background_y  += 0.2
+    background2_y += 0.2
     
     if ( background_y == background_height ) :
         background_y =  -background_height
@@ -161,6 +172,18 @@ def runGame( ) :
         crash()
     
     drawObject( fighter, x, y )  # 비행기를 게임 화면의 ( x, y ) 좌표에 그리기
+    
+    #운석 그리기
+    rockAngle += 2  # 추가: 운석의 회전 속도 DJ
+    if rockAngle >= 360:
+        rockAngle = 0
+
+        # 회전한 운석 이미지 그리기
+    rotated_rock = pygame.transform.rotate(rock, rockAngle)  # 추가: 운석 이미지 회전 DJ
+    drawObject(rotated_rock, rockX, rockY)  # 운석 그리기
+    
+    rockX += rockDirection * random.choice([-1, 1])  # Move rock horizontally in current direction
+    #rockY += (rockSpeed/3)  # Move rock vertically downward
     
     # 미사일 발사 화면에 그리기
     if len( missileXY ) != 0 :
@@ -221,15 +244,25 @@ def runGame( ) :
       rockY = 0
       destroySound = pygame.mixer.Sound( random.choice( explosionSound ) )
       isShot = False
-      
+      gaugeValue += 10
+      if gaugeValue > 100 :
+          gaugeValue = 100
       # 운석 맞추면 속도 증가
       rockSpeed += 0.02
       if rockSpeed >= 10 :
           rockSpeed = 10
     
-    drawObject( rock, rockX, rockY )  # 운석 그리기
+    #drawObject( rock, rockX, rockY )  # 운석 그리기
         
+    #pygame.display.update( )  # 게임 화면을 다시 그림
+    
+    #운석 그리기
+    pygame.draw.rect(gamePad, (255, 0, 0), (gaugeX, gaugeY, gaugeWidth, gaugeHeight), border_radius=3)  # Red gauge bar
+    
+    pygame.draw.rect(gamePad, (0, 255, 0), (gaugeX, gaugeY, gaugeWidth * (gaugeValue / 100), gaugeHeight), border_radius=50)  # Green gauge bar based on gaugeValue
+    useSkill(gaugeValue) 
     pygame.display.update( )  # 게임 화면을 다시 그림
+    
     
     gamePad.fill( BLACK )  # 게임 화면 ( 검은색 )
     
@@ -238,6 +271,14 @@ def runGame( ) :
     clock.tick( 60 )  # 게임화면의 초당 프레임수를 60으로 설정
     
   pygame.quit( )  # pygame 종료
+  
+#스킬게이지 표시
+def useSkill ( gaugeValue ) :
+  global gamePad
+  font = pygame.font.Font( 'NanumGothic.ttf', 20 )
+  text = font.render('skill gauge' , True ,(255, 255, 255) )
+  gamePad.blit( text, (190,590))
+  
   
 # 운석을 맞춘 개수 계산
 def writeScore( count ) :
@@ -303,7 +344,7 @@ def runStory( ) :
       # 화면 프레임 정해주기
       clock.tick(60)
       
-      # 아무키나 누르면 runMenu( ) 호
+      # 아무키나 누르면 runMenu( ) 호출
       for event in pygame.event.get( ) :
         if event.type in [ pygame.QUIT ] : 
           pygame.quit( )
