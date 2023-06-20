@@ -17,6 +17,7 @@ from time import sleep
 BLACK = ( 0, 0, 0 )
 padWidth = 480  # 게임화면의 가로크기
 padHeight = 640  # 게임화면의 세로크기
+background_height = padHeight  # 움직이는 배경 변수 선언 ( dean )
 rockImage = [ 'rock01.png', 'rock02.png', 'rock03.png', 'rock04.png', 'rock05.png', \
               'rock06.png', 'rock07.png', 'rock08.png', 'rock09.png', 'rock10.png', \
               'rock11.png', 'rock12.png', 'rock13.png', 'rock14.png', 'rock15.png', \
@@ -33,11 +34,12 @@ def drawObject( obj, x, y ) :
   gamePad.blit( obj, ( x, y ) )
   
 def initGame( ) :
-  global gamePad, clock, background, fighter, missile, explosion, missileSound, gameOverSound
+  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, gameOverSound
   pygame.init( )
   gamePad = pygame.display.set_mode( ( padWidth, padHeight ) )
   pygame.display.set_caption( 'PyShooting' )  # 게임 이름
-  background = pygame.image.load( 'background.png' ) # 배경 그림
+  background = pygame.image.load( 'background.png' )  # 배경 그림
+  background2 = background.copy()  # 움직이는 배경위한 소스추가( dean )
   fighter = pygame.image.load( 'fighter.png' ) # 전투기 그림
   missile = pygame.image.load( 'missile.png' )  # 미사일 그림
   explosion = pygame.image.load( 'explosion.png' )  # 폭발 그림
@@ -48,7 +50,7 @@ def initGame( ) :
   clock = pygame.time.Clock( )
 
 def runGame( ) :
-  global gamePad, clock, background, fighter, missile, explosion, missileSound
+  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound
   
   missileXY = []  # 무기 좌표 리스트
   
@@ -74,6 +76,11 @@ def runGame( ) :
   y = padHeight * 0.9
   fighterX = 0
   fighterY = 0
+  
+  # 움직이는 배경이미지을 위한 변수 선언( Dean )
+  # 화면은 Top, Left 좌표는 (0,0)로 background2_y 는 0 아래쪽 마이너스 좌표에 위치해야 함
+  background_y  = 0
+  background2_y = -background_height
   
   # 전투기 미사일에 운석이 맞았을 경우 True
   isShot = False
@@ -117,8 +124,21 @@ def runGame( ) :
           fighterX = 0
           fighterY = 0
       """
+      
+    # 움직이는 배경 화면 좌표값 변경 ( dean )  
+    background_y  += 2
+    background2_y += 2
+    
+    if ( background_y == background_height ) :
+        background_y =  -background_height
         
-    drawObject( background, 0, 0 )  # 배경 화면 그리기
+    if ( background2_y == background_height ) :
+        background2_y = -background_height
+      
+    # 배경 화면 그리기        
+    #drawObject( background, 0, 0 )  
+    drawObject( background,  0, background_y )
+    drawObject( background2, 0, background2_y )     
     
     x += fighterX
     if x < 0 :
@@ -312,7 +332,7 @@ def runMenu( ) :
     
 # 게임 메시지 출력
 def writeMessage( text ) :
-    global gamePad, gameOverSound, background
+    global gamePad, gameOverSound
     textfont = pygame.font.Font( 'NanumGothic.ttf', 80 )
     text = textfont.render( text, True, ( 255, 0, 0 ) )
     textpos = text.get_rect( )
@@ -327,12 +347,12 @@ def writeMessage( text ) :
     
 # 전투기가 운석과 충돌했을 때 메시지 출력
 def crash( ) :
-    global gamePad, background
+    global gamePad
     writeMessage( '전투기 파괴!' )
     
 # 게임 오버 메시지 보이기
 def gameOver( ) :
-    global gamePad, background
+    global gamePad
     writeMessage( '게임 오버!' )
   
 initGame( )
