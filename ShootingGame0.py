@@ -42,11 +42,11 @@ def initGame( ) :
   missile = pygame.image.load( 'missile.png' )  # 미사일 그림
   explosion = pygame.image.load( 'explosion.png' )  # 폭발 그림
   pygame.mixer.music.load('music.wav')  # 배경음악
-  pygame.mixer.music.play(-1)  # 배경음악 재상
+  pygame.mixer.music.play(-1)  # 배경음악 재생
   missileSound = pygame.mixer.Sound('missile.wav')  # 미사일 사운드
   gameOverSound = pygame.mixer.Sound('gameover.wav')  # 게임 오버 사운드
   clock = pygame.time.Clock( )
-  
+
 def runGame( ) :
   global gamePad, clock, background, fighter, missile, explosion, missileSound
   
@@ -90,17 +90,18 @@ def runGame( ) :
       if event.type == pygame.KEYDOWN :
         if event.key == pygame.K_LEFT :  # 전투기를 왼쪽으로 이동
           fighterX -= 5
-        elif event.key == pygame.K_RIGHT :  # 전투기를 오른쪽으로 이동
+        if event.key == pygame.K_RIGHT :  # 전투기를 오른쪽으로 이동
           fighterX += 5
-        elif event.key == pygame.K_UP :
+        if event.key == pygame.K_UP : # 위로 이동
           fighterY -= 5
-        elif event.key == pygame.K_DOWN :
+        if event.key == pygame.K_DOWN : # 아래로 이동
           fighterY += 5
-        elif event.key == pygame.K_SPACE :  # 미사일 발사
+        if event.key == pygame.K_SPACE :  # 미사일 발사
           missileSound.play( )  # 미사일 사운드 재생
           missileX = x + fighterWidth/2
           missileY = y - fighterHeight
           missileXY.append( [ missileX, missileY ] )
+          
       # 대각선 방향 이동 추가
       elif event.type == pygame.KEYUP :
         if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT :
@@ -228,10 +229,29 @@ def writePassed( count ) :
   font = pygame.font.Font( 'NanumGothic.ttf', 20 )
   text = font.render( '놓친 운석 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (360, 0 ) )
-  
+
+# 시작화면 출력
+def runMenu( ) :
+    global gamePad, background
+    drawObject( background, 0, 0 )  # 배경 화면 그리기
+    text = 'press any key'
+    textfont = pygame.font.Font( 'NanumGothic.ttf', 80 )
+    text = textfont.render( text, True, ( 255, 0, 0 ) )
+    textpos = text.get_rect( )
+    textpos.center = ( padWidth / 2, padHeight / 2 )
+    gamePad.blit( text, textpos )
+    pygame.display.update( )
+    while True :
+      for event in pygame.event.get( ) :
+        if event.type in [ pygame.QUIT ] :  # 게임 프로그램 종료
+          pygame.quit( )
+          sys.exit( )
+        if event.type == pygame.KEYDOWN :
+          runGame( )
+    
 # 게임 메시지 출력
 def writeMessage( text ) :
-    global gamePad, gameOverSound
+    global gamePad, gameOverSound, background
     textfont = pygame.font.Font( 'NanumGothic.ttf', 80 )
     text = textfont.render( text, True, ( 255, 0, 0 ) )
     textpos = text.get_rect( )
@@ -242,17 +262,18 @@ def writeMessage( text ) :
     gameOverSound.play()  # 게임 오버 사운드 재생
     sleep( 2 )
     pygame.mixer.music.play( -1 )
-    runGame( )
+    runMenu( )
     
 # 전투기가 운석과 충돌했을 때 메시지 출력
 def crash( ) :
-    global gamePad
+    global gamePad, background
     writeMessage( '전투기 파괴!' )
     
 # 게임 오버 메시지 보이기
 def gameOver( ) :
-    global gamePad
+    global gamePad, background
     writeMessage( '게임 오버!' )
   
 initGame( )
+runMenu( )
 runGame( )
