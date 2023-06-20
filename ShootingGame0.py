@@ -81,7 +81,7 @@ def runGame( ) :
         pygame.quit( )
         sys.exit( )
         
-      if event.type in [ pygame.KEYDOWN ] :
+      if event.type == pygame.KEYDOWN :
         if event.key == pygame.K_LEFT :  # 전투기를 왼쪽으로 이동
           fighterX -= 5
         elif event.key == pygame.K_RIGHT :  # 전투기를 오른쪽으로 이동
@@ -95,15 +95,21 @@ def runGame( ) :
           missileX = x + fighterWidth/2
           missileY = y - fighterHeight
           missileXY.append( [ missileX, missileY ] )
+      # 대각선 방향 이동 추가
+      elif event.type == pygame.KEYUP :
+        if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT :
+          fighterX = 0
+        elif event.key == pygame.K_UP or event.key == pygame.K_DOWN :
+          fighterY = 0
           
       # 방향키를 떼면 전투기 점춤
-
+      """
       if event.type in [ pygame.KEYUP ] :
         if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or \
             event.key == pygame.K_UP or event.key == pygame.K_DOWN :
           fighterX = 0
           fighterY = 0
-
+      """
         
     drawObject( background, 0, 0 )  # 배경 화면 그리기
     
