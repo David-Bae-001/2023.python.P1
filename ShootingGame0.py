@@ -4,9 +4,9 @@
   
   @PC user: 505-20
   
-  FileName : ShootingGame0.py
+  FileName : ShootingGameEx.py
   Author   : David Bae
-  Description : 슈팅 게임
+  Description : 슈팅 게임 예제
 """
 
 import pygame
@@ -67,6 +67,7 @@ def runGame( ) :
   x = padWidth * 0.45
   y = padHeight * 0.9
   fighterX = 0
+  fighterY = 0
   
   # 전투기 미사일에 운석이 맞았을 경우 True
   isShot = False
@@ -85,6 +86,10 @@ def runGame( ) :
           fighterX -= 5
         elif event.key == pygame.K_RIGHT :  # 전투기를 오른쪽으로 이동
           fighterX += 5
+        elif event.key == pygame.K_UP :
+          fighterY -= 5
+        elif event.key == pygame.K_DOWN :
+          fighterY += 5
         elif event.key == pygame.K_SPACE :  # 미사일 발사
           missileSound.play( )  # 미사일 사운드 재생
           missileX = x + fighterWidth/2
@@ -92,9 +97,13 @@ def runGame( ) :
           missileXY.append( [ missileX, missileY ] )
           
       # 방향키를 떼면 전투기 점춤
+
       if event.type in [ pygame.KEYUP ] :
-        if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT :
+        if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or \
+            event.key == pygame.K_UP or event.key == pygame.K_DOWN :
           fighterX = 0
+          fighterY = 0
+
         
     drawObject( background, 0, 0 )  # 배경 화면 그리기
     
@@ -103,6 +112,12 @@ def runGame( ) :
       x = 0
     elif x > padWidth - fighterWidth :
       x = padWidth - fighterWidth
+    
+    y += fighterY
+    if y < 0 :
+      y = 0
+    elif y > padHeight - fighterWidth :
+      y = padHeight - fighterWidth
     
     # 전투기가 운석과 충돌했는지 체크
     if ( y < ( rockY + rockHeight ) ) :
