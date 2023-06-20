@@ -119,7 +119,11 @@ def runGame( ) :
           missileX = x + fighterWidth/2
           missileY = y - fighterHeight
           missileXY.append( [ missileX, missileY ] )
-          
+        if event.key == pygame.K_q:   # q 눌렀을 때 모든 운석 없애기
+          isShot = True
+          shotCount += 1
+      
+      
       # 대각선 방향 이동 추가
       elif event.type == pygame.KEYUP :
         if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT :
