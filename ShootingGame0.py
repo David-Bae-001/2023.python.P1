@@ -4,9 +4,9 @@
   
   @PC user: 505-20
   
-  FileName : ShootingGameEx.py
-  Author   : David Bae
-  Description : 슈팅 게임 예제
+  FileName : ShootingGame.py
+  Author   : TEAM STEP
+  Description : 슈팅 게임
 """
 """
     pip install tk     
@@ -41,45 +41,42 @@ import random
 from time import sleep
 from tkinter import *
 
+#변수 선언부
 BLACK = ( 0, 0, 0 )
 padWidth = 480  # 게임화면의 가로크기
 padHeight = 640  # 게임화면의 세로크기
 background_height = padHeight  # 움직이는 배경 변수 선언 
-rockImage = [ 'rock01.png', 'rock02.png', 'rock03.png', 'rock04.png', 'rock05.png', \
-              'rock06.png', 'rock07.png', 'rock08.png', 'rock09.png', 'rock10.png', \
-              'rock11.png', 'rock12.png', 'rock13.png', 'rock14.png', 'rock15.png', \
-              'rock16.png', 'rock17.png', 'rock18.png', 'rock19.png', 'rock20.png', \
-              'rock21.png', 'rock22.png', 'rock23.png', 'rock24.png', 'rock25.png', \
-              'rock26.png', 'rock27.png', 'rock28.png', 'rock29.png', 'rock30.png' ]
-explosionSound = [ 'explosion01.wav', 'explosion02.wav', 'explosion03.wav', ]
-explosionSound = [ 'explosion01.wav', 'explosion02.wav', 'explosion03.wav', 'explosion04.wav' ]
+rockImage = [ './images/rock01.png', './images/rock02.png', './images/rock03.png', './images/rock04.png', './images/rock05.png', \
+              './images/rock06.png', './images/rock07.png', './images/rock08.png', './images/rock09.png', './images/rock10.png', \
+              './images/rock11.png', './images/rock12.png', './images/rock13.png', './images/rock14.png', './images/rock15.png', \
+              './images/rock16.png', './images/rock17.png', './images/rock18.png', './images/rock19.png', './images/rock20.png', \
+              './images/rock21.png', './images/rock22.png', './images/rock23.png', './images/rock24.png', './images/rock25.png', \
+              './images/rock26.png', './images/rock27.png', './images/rock28.png', './images/rock29.png', './images/rock30.png' ]
+explosionSound = [ './images/explosion01.wav', './images/explosion02.wav', './images/explosion03.wav', './images/explosion04.wav']
 screen = pygame.display.set_mode((padWidth, padHeight), pygame.DOUBLEBUF)
+start_time = 0   # 게임 시작시간 초기화
 
-# 게임에 등장하는 객체를 드로잉
-def drawObject( obj, x, y ) :
-  global gamePad
-  gamePad.blit( obj, ( x, y ) )
-  
 # 게임시작시 게임 초기화
 def initGame( ) :
-  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, gameOverSound, shotCount
+  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, gameOverSound, shotCount, background_speed
   pygame.init( )
   gamePad = pygame.display.set_mode( ( padWidth, padHeight ) )
   pygame.display.set_caption( 'PyShooting' )  # 게임 이름
-  background = pygame.image.load( 'background1.png' )  # 배경 그림 1, 2, 3
+  background = pygame.image.load( './images/background1.png' )  # 배경 그림 1, 2, 3
   background2 = background.copy()  # 움직이는 배경위한 소스추가
-  fighter = pygame.image.load( 'fighter.png' ) # 전투기 그림
-  missile = pygame.image.load( 'missile.png' )  # 미사일 그림
-  explosion = pygame.image.load( 'explosion.png' )  # 폭발 그림
-  pygame.mixer.music.load('music.wav')  # 배경음악
+  fighter = pygame.image.load( './images/fighter3.png' ) # 전투기 그림
+  missile = pygame.image.load( './images/missile.png' )  # 미사일 그림
+  explosion = pygame.image.load( './images/explosion.png' )  # 폭발 그림
+  pygame.mixer.music.load('./images/music.wav')  # 배경음악
   pygame.mixer.music.play(-1)  # 배경음악 재생
-  missileSound = pygame.mixer.Sound('missile.wav')  # 미사일 사운드
-  gameOverSound = pygame.mixer.Sound('gameover.wav')  # 게임 오버 사운드
+  missileSound = pygame.mixer.Sound('./images/missile.wav')  # 미사일 사운드
+  gameOverSound = pygame.mixer.Sound('./images/gameover.wav')  # 게임 오버 사운드
   clock = pygame.time.Clock( )
+  background_speed = 0.2   # 배경 이동속도 초기값
 
 # 본게임 시작
 def runGame( ) :
-  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, shotCount
+  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, shotCount, start_time, background_speed
   
   missileXY = []  # 무기 좌표 리스트
   
@@ -147,8 +144,12 @@ def runGame( ) :
           missileY = y - fighterHeight
           missileXY.append( [ missileX, missileY ] )
         if event.key == pygame.K_q:   # q 눌렀을 때 모든 운석 없애기
-          isShot = True
-          shotCount += 1
+          if gaugeValue == 100 :
+            isShot = True
+            shotCount += 1
+            gaugeValue = 0
+          else :
+            gaugeValue = gaugeValue
       
       
       # 대각선 방향 이동 추가
@@ -157,19 +158,10 @@ def runGame( ) :
           fighterX = 0
         elif event.key == pygame.K_UP or event.key == pygame.K_DOWN :
           fighterY = 0
-          
-      # 방향키를 떼면 전투기 점춤
-      """
-      if event.type in [ pygame.KEYUP ] :
-        if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or \
-            event.key == pygame.K_UP or event.key == pygame.K_DOWN :
-          fighterX = 0
-          fighterY = 0
-      """
       
     # 움직이는 배경 화면 좌표값 변경 
-    background_y  += 0.2
-    background2_y += 0.2
+    background_y  += background_speed
+    background2_y += background_speed
     
     if ( background_y == background_height ) :
         background_y =  -background_height
@@ -182,6 +174,21 @@ def runGame( ) :
     drawObject( background,  0, background_y )
     drawObject( background2, 0, background2_y )     
     
+    #게임시간이 3초가 되면 다음 화면으로 넘어감( 일단 중간에 왕 나오는 배경 3초씩 )
+    gametime = int(time.time()-start_time)
+    if gametime > 3 and gametime < 7 :
+      background = pygame.image.load( './images/background0.png' )
+      background2 = background.copy()
+    if gametime > 6 and gametime < 10 :
+      background = pygame.image.load( './images/background2.png' )
+      background2 = background.copy()
+    if gametime > 9 and gametime < 13 :
+      background = pygame.image.load( './images/background0.png' )
+      background2 = background.copy()
+    if gametime > 12 and gametime < 16 :
+      background = pygame.image.load( './images/background3.png' )
+      background2 = background.copy()
+      
     x += fighterX
     if x < 0 :
       x = 0
@@ -303,25 +310,30 @@ def runGame( ) :
     
   pygame.quit( )  # pygame 종료
   
+
+# 게임에 등장하는 객체를 드로잉
+def drawObject( obj, x, y ) :
+  global gamePad
+  gamePad.blit( obj, ( x, y ) )
+  
 #스킬게이지 표시
 def useSkill ( gaugeValue ) :
   global gamePad
-  font = pygame.font.Font( 'NanumGothic.ttf', 20 )
+  font = pygame.font.Font( './images/NanumGothic.ttf', 20 )
   text = font.render('skill gauge' , True ,(255, 255, 255) )
   gamePad.blit( text, (190,590))
-  
   
 # 운석을 맞춘 개수 계산
 def writeScore( count ) :
   global gamePad, shotCount
-  font = pygame.font.Font( 'NanumGothic.ttf', 20 )
+  font = pygame.font.Font( './images/NanumGothic.ttf', 20 )
   text = font.render( '파괴한 운석 수 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (10, 0 ) )
   
 # 운석이 화면 아래로 통과한 개수
 def writePassed( count ) :
   global gamePad, shotCount
-  font = pygame.font.Font( 'NanumGothic.ttf', 20 )
+  font = pygame.font.Font( './images/NanumGothic.ttf', 20 )
   text = font.render( '놓친 운석 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (360, 0 ) )
 
@@ -385,10 +397,12 @@ def runStory( ) :
           
 # 시작화면 출력
 def runMenu( ) :
-    global gamePad, background, shotCount
+    global gamePad, background, background2, shotCount, start_time
+    background = pygame.image.load( './images/background1.png' )
+    background2 = pygame.image.load( './images/background1.png' )
     drawObject( background, 0, 0 )  # 배경 화면 그리기
     text = 'press any key'
-    textfont = pygame.font.Font( 'NanumGothic.ttf', 80 )
+    textfont = pygame.font.Font( './images/NanumGothic.ttf', 80 )
     text = textfont.render( text, True, ( 255, 0, 0 ) )
     textpos = text.get_rect( )
     textpos.center = ( padWidth / 2, padHeight / 2 )
@@ -400,12 +414,13 @@ def runMenu( ) :
           pygame.quit( )
           sys.exit( )
         if event.type == pygame.KEYDOWN :
+          start_time = time.time()
           runGame( )
     
 # 게임 메시지 출력
 def writeMessage( text ) :
     global gamePad, gameOverSound, shotCount
-    textfont = pygame.font.Font( 'NanumGothic.ttf', 80 )
+    textfont = pygame.font.Font( './images/NanumGothic.ttf', 80 )
     text = textfont.render( text, True, ( 255, 0, 0 ) )
     textpos = text.get_rect( )
     textpos.center = ( padWidth / 2, padHeight / 2 )
