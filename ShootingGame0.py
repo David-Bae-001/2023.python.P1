@@ -8,11 +8,38 @@
   Author   : David Bae
   Description : 슈팅 게임 예제
 """
+"""
+    pip install tk     
+    pip install pymysql
+    
+    랭킹연동 : 마리아 DB 깔아야 됨
+
+    # 데이터베이스 생성
+    CREATE DATABASE pythonDB;
+
+    # 테이블 생성
+    DROP TABLE IF EXISTS GameRankingTbl ;
+    
+    CREATE TABLE GameRankingTbl 
+    (
+        GR_NO    INT(11) NOT NULL AUTO_INCREMENT,
+        GR_NAME  VARCHAR(100) NOT NULL DEFAULT '' COLLATE 'utf8mb4_general_ci',
+        GR_SCORE INT(11) NULL DEFAULT NULL,
+        GR_DATE  DATETIME NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`GR_NO`) USING BTREE
+    )
+    COMMENT='슈팅게임 게임순위 테이블'
+    COLLATE='utf8mb4_general_ci'
+    ENGINE=InnoDB
+    ;
+
+"""
 import time
 import pygame
 import sys
 import random
 from time import sleep
+from tkinter import *
 
 BLACK = ( 0, 0, 0 )
 padWidth = 480  # 게임화면의 가로크기
@@ -35,11 +62,11 @@ def drawObject( obj, x, y ) :
   
 # 게임시작시 게임 초기화
 def initGame( ) :
-  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, gameOverSound
+  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, gameOverSound, shotCount
   pygame.init( )
   gamePad = pygame.display.set_mode( ( padWidth, padHeight ) )
   pygame.display.set_caption( 'PyShooting' )  # 게임 이름
-  background = pygame.image.load( 'background2.png' )  # 배경 그림 1, 2, 3
+  background = pygame.image.load( 'background1.png' )  # 배경 그림 1, 2, 3
   background2 = background.copy()  # 움직이는 배경위한 소스추가
   fighter = pygame.image.load( 'fighter.png' ) # 전투기 그림
   missile = pygame.image.load( 'missile.png' )  # 미사일 그림
@@ -52,7 +79,7 @@ def initGame( ) :
 
 # 본게임 시작
 def runGame( ) :
-  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound
+  global gamePad, clock, background, background2, fighter, missile, explosion, missileSound, shotCount
   
   missileXY = []  # 무기 좌표 리스트
   
@@ -286,14 +313,14 @@ def useSkill ( gaugeValue ) :
   
 # 운석을 맞춘 개수 계산
 def writeScore( count ) :
-  global gamePad
+  global gamePad, shotCount
   font = pygame.font.Font( 'NanumGothic.ttf', 20 )
   text = font.render( '파괴한 운석 수 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (10, 0 ) )
   
 # 운석이 화면 아래로 통과한 개수
 def writePassed( count ) :
-  global gamePad
+  global gamePad, shotCount
   font = pygame.font.Font( 'NanumGothic.ttf', 20 )
   text = font.render( '놓친 운석 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (360, 0 ) )
@@ -358,7 +385,7 @@ def runStory( ) :
           
 # 시작화면 출력
 def runMenu( ) :
-    global gamePad, background
+    global gamePad, background, shotCount
     drawObject( background, 0, 0 )  # 배경 화면 그리기
     text = 'press any key'
     textfont = pygame.font.Font( 'NanumGothic.ttf', 80 )
@@ -377,7 +404,7 @@ def runMenu( ) :
     
 # 게임 메시지 출력
 def writeMessage( text ) :
-    global gamePad, gameOverSound
+    global gamePad, gameOverSound, shotCount
     textfont = pygame.font.Font( 'NanumGothic.ttf', 80 )
     text = textfont.render( text, True, ( 255, 0, 0 ) )
     textpos = text.get_rect( )
@@ -388,18 +415,261 @@ def writeMessage( text ) :
     gameOverSound.play()  # 게임 오버 사운드 재생
     sleep( 2 )
     pygame.mixer.music.play( -1 )
+    game = Ranking() 
+    game.showRanking( shotCount )
     runMenu( )
     
 # 전투기가 운석과 충돌했을 때 메시지 출력
 def crash( ) :
-    global gamePad
+    global gamePad, shotCount
     writeMessage( '전투기 파괴!' )
+    
+    #종료시 게임순위 및 등록 (Dean Class)    
+    game = Ranking() 
+    game.showRanking( shotCount )   
     
 # 게임 오버 메시지 보이기
 def gameOver( ) :
-    global gamePad
+    global gamePad, shotCount
     writeMessage( '게임 오버!' )
+    
+    #종료시 게임순위 및 등록 (Dean Class)    
+    game = Ranking() 
+    game.showRanking( shotCount )   
   
+class GameRanking :
+    import pymysql
+    
+    #클래스 멤버 변수 정의
+    conn = None
+    curs = None 
+    
+    def __init__( self ) : 
+        self.conn = None
+        self.curs = None            
+                     
+    def __del__( self ) :                  
+        del self      
+        print( "class GameRanking 메모리 해제." )  
+        
+    
+    # 게임점수가 랭킹에 포함되는지 체크
+    def checkRanking( self, gameScore ) :
+        import pymysql     
+        rankingCnt = 5  # 보여줄 랭킹 갯수
+        minScore = 0    # 랭킹순위중 가장 낮은 점수
+        
+        # MySQL Connection 연결
+        self.conn = pymysql.connect( host='localhost', user='root', password='1234', db='pythonDB', charset='utf8' )    
+         
+        # Connection 으로부터 Dictoionary Cursor 생성
+        self.curs = self.conn.cursor( pymysql.cursors.DictCursor )
+         
+        # SQL문 실행
+        sql =  " Select IFNULL( MIN( a.gr_score ), 0 ) min_score, count(*) cnt From "
+        sql += " (Select  gr_score  from gamerankingtbl order by gr_score desc LIMIT %s, %s ) a "           
+                   
+        self.curs.execute( sql, ( 0, rankingCnt ) )    # Top 5만 출력  
+         
+        # 데이타 Fetch
+        rows = self.curs.fetchall()
+        for row in rows:           
+            minScore = row['min_score'] #    minScore 테이블 셀렉트한 첫번째 값 row[0] 입력
+            cntRecord = row['cnt']      #    cntRecord 에 랭킹 총갯수
+       
+        # Connection 닫기
+        self.conn.close()
+     
+        if ( gameScore > minScore or cntRecord < rankingCnt ) :    
+            return True
+        else:
+            return False  
+        
+    ## 함수 선언부
+    def addRankingToListBox( self ) :                      
+        import pymysql             
+        
+        strData1, strData2, strData3, strData4  = [], [], [], []
+        ranking = 1
+        
+        # MySQL Connection 연결
+        self.conn = pymysql.connect(host='localhost', user='root', password='1234', db='pythonDB', charset='utf8')    
+         
+        # Connection 으로부터 Dictoionary Cursor 생성
+        self.curs = self.conn.cursor( pymysql.cursors.DictCursor )
+         
+        # SQL문 실행            
+        sql = " select gr_name, gr_score, gr_date from gamerankingtbl order by gr_score desc Limit %s, %s ;"
+        self.curs.execute(sql, (0, 5))   # Top 5만 출력        
+      
+        # 데이타 Fetch
+        rows = self.curs.fetchall()
+        for row in rows:
+         #   print(row)
+            # 출력 : {'category': 1, 'id': 1, 'region': '서울', 'name': '김정수'}
+            # print( row['gr_name'], row['gr_score'], row['gr_date'])
+        
+            strData1.append( ranking )
+            strData2.append(row['gr_name']) # 리스트 strData1에 테이블 셀렉트한 첫번째 값 row[0] 입력
+            strData3.append(row['gr_score'])
+            strData4.append(row['gr_date'])
+            ranking += 1
+        
+        # Connection 닫기
+        self.conn.close()          
+        
+        return  strData1, strData2, strData3, strData4      
+    
+      
+class Ranking( GameRanking ) :   
+    window = None
+     
+    def __init__( self ) : 
+         super().__init__()    
+         window = None
+   
+    def __del__( self ) :                   
+        del self      
+        print( "sub class ShowRanking 메모리 해제."  )            
+
+    # 저장 버튼 클릭시 호출되는 함수
+    def insertRanking( self, gameScore, name ) :       
+        from tkinter import messagebox
+        import pymysql      
+        
+        data1, data2  = "", 0
+        sql = ""   
+       
+        # entry(한줄텍스트박스)로 입력받은 값을 data 변수들에 입력       
+        if ( gameScore > 0 ) :
+             data2 = gameScore      # 점수           
+        else:
+             return
+        
+        # MySQL Connection 연결
+        self.conn = pymysql.connect(host='localhost', user='root', password='1234', db='pythonDB', charset='utf8')    
+         
+        # Connection 으로부터 Dictoionary Cursor 생성
+        self.curs = self.conn.cursor(pymysql.cursors.DictCursor)     
+        
+        sql = "insert into gamerankingtbl(gr_name,gr_score) values('" + name + "'," + str(data2) + ");"
+        
+        try :   # 예외처리 시작      
+            print( sql )
+            self.curs.execute( sql ) 
+        except :    # 에러발생 시 작동
+            messagebox.showerror('오류', '데이터 입력 오류가 발생함')
+        else :  # 에러 없을 시 작동
+            messagebox.showinfo('성공', '데이터 입력 성공')
+           
+        self.conn.commit()
+        self.conn.close()
+       
+        # 추가한 리스트 새로고침       
+        self.window.destroy()
+        self.showRanking( gameScore )
+        self.window.update()           
+    
+    def showRanking( self, gameScore ) :   
+      
+        ## 메인 코드부  
+        BLACK = "#000000"
+        WHITE = "#FFFFFF"
+        GRAY  = "#CCCCCC" 
+        
+        #창을 화면 중앙에 배치
+        self.window = Tk()
+        
+        win_x = 370   # 창 넓이
+        win_y = 194   # 창 높이
+        tot_x = self.window.winfo_screenwidth()
+        tot_y = self.window.winfo_screenheight()
+        x_pos = int( ( tot_x / 2 ) - ( win_x / 2 ) )
+        y_pos = int( ( tot_y / 2 ) - ( win_y / 2 ) )
+        
+        self.window.geometry(f"{win_x}x{win_y}+{x_pos}+{y_pos}")
+    
+        self.window.resizable(width=False, height=False) # 창 크기 고정
+        self.window.title("슈팅게임 순위 V0.3b")
+        
+        # 게임 점수가 Top 5에 속할 경우 등록 버튼 나오게 처리      
+        padding_top = Label( self.window, text = "", width = 1, height = 1 )
+        padding_top.grid( row = 0, column = 0, columnspan = 6 )        
+               
+        if ( self.checkRanking( gameScore ) ) :       
+            padding_left = Label( self.window, text = "", width = 1 )
+            padding_left.grid( row = 1, column = 0 ) 
+            
+            label =Label( self.window, text = "이름입력", fg=BLACK, bg = WHITE )
+            label.grid( row = 1, column = 1 ) 
+            
+            edt1 = Entry( self.window, width = 17, bg = WHITE, justify = LEFT )  
+            edt1.grid( row = 1, column = 2 )
+            
+            btnInsert = Button( self.window, text="저 장", bg = WHITE, justify = LEFT
+                               ,command = lambda  : self.insertRanking ( gameScore, edt1.get() ) )                      
+            btnInsert.grid( row = 1, column = 3 )
+            
+            msg = "게임점수는 " +str( gameScore )+"점"
+            label =Label( self.window, text = msg , fg=BLACK, bg = WHITE )
+            label.grid( row = 1, column = 4 ) 
+        else :
+            msg = "당신의 게임 점수는 " +str( gameScore )+"점입니다."
+            label =Label( self.window, text = msg , fg=BLACK, bg = WHITE )
+            label.grid( row = 1, column = 0, columnspan = 5 ) 
+            
+        
+        padding_top = Label( self.window, text = "", width = 1, height = 1 )
+        padding_top.grid( row = 2, column = 0, columnspan = 6 ) 
+        
+        padding_left = Label( self.window, text = "", width = 1 )
+        padding_left.grid( row = 3, column = 0 ) 
+        
+        label =Label( self.window, text = "순위", width = 7, fg=WHITE, bg = BLACK, justify = LEFT )
+        label.grid( row = 3, column = 1 ) 
+        
+        label =Label( self.window, text = "사용자 이름", width = 16, fg=WHITE, bg = BLACK, justify = LEFT )
+        label.grid( row = 3, column = 2 ) 
+        
+        label =Label( self.window, text = "점 수", width = 5, fg=WHITE, bg = BLACK, justify = LEFT )
+        label.grid( row = 3, column = 3 ) 
+        
+        label =Label( self.window, text = "날 짜", width = 16, fg=WHITE, bg = BLACK, justify = LEFT )
+        label.grid( row = 3, column = 4 )
+        
+        padding_left = Label( self.window, text = "", width = 1 )
+        padding_left.grid( row = 4, column = 0 ) 
+        
+        listData1 = Listbox( self.window, bg = 'white', width = 7, height = 5, justify = LEFT )
+        listData1.grid( row = 4, column = 1 )
+         
+        listData2 = Listbox( self.window, bg = 'white', width = 17, height = 5, justify = LEFT )
+        listData2.grid( row = 4, column = 2 )
+        
+        listData3 = Listbox( self.window, bg = 'white', width = 5, height = 5, justify = LEFT )
+        listData3.grid( row = 4, column = 3 )
+        
+        listData4 = Listbox( self.window, bg = 'white', width = 17, height = 5, justify = LEFT )
+        listData4.grid( row = 4, column = 4 )
+        
+        padding_right = Label( self.window, text = "", width = 1 )
+        padding_right.grid( row = 4, column = 5 )      
+        
+        listData1.delete( 0, listData1.size() - 1 )    # 리스트박스에 있는 값들을 모두 지워버림
+        listData2.delete( 0, listData2.size() - 1 )
+        listData3.delete( 0, listData3.size() - 1 )    # 리스트박스에 있는 값들을 모두 지워버림
+        listData4.delete( 0, listData4.size() - 1 )                      
+                
+        strDate1, strDate2, strData3, strDate4 = ( self.addRankingToListBox() )
+      
+        for item1, item2, item3, item4 in zip( strDate1, strDate2, strData3, strDate4 ): #item에 strData들을 한줄씩 입력
+            listData1.insert(END, item1)    # 리스트박스 마지막줄에 item 값들을 넣어줘서 보여
+            listData2.insert(END, item2) 
+            listData3.insert(END, item3)  
+            listData4.insert(END, item4)              
+            
+        self.window.mainloop()    
+
 initGame( )
 runStory( )
 runGame( )
