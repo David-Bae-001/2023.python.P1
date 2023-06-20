@@ -8,7 +8,7 @@
   Author   : David Bae
   Description : 슈팅 게임 예제
 """
-
+import time
 import pygame
 import sys
 import random
@@ -230,6 +230,64 @@ def writePassed( count ) :
   text = font.render( '놓친 운석 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (360, 0 ) )
 
+# 첫 화면( 시놉시스 ) 구현
+def runStory( ) :
+  global gamePad, background, screen  
+  screen_width = 480  # 게임화면의 가로크기
+  screen_height = 640  # 게임화면의 세로크기
+  drawObject( background, 0, 0 )  # 배경 화면 그리기
+  
+  # 한국 글씨 폰트 적용
+  font_path = './font/12Bold.ttf'
+  font_size = 30
+  korean_font = pygame.font.Font(font_path, font_size)
+  
+  
+  # 시놉시스
+  text_lines = ["미래의 지구,", "외계인의 침공이", "시작되었다.", "외계인은", "이미 지구 내에", "깊숙이 침투했고", "전 인류는 ", "모든 기술력을 모아 ", "‘STEP-1호기’를 ", "완성하고 마는데...", "‘STEP-1호기’로 ", "지구 안에 침투한 ", "외계인들을 ", "모두 물리치자."]
+  text_positions = [(screen_width // 2, screen_height + korean_font.get_height() * i) for i in range(len(text_lines))]
+  text_speed = 1
+  
+  # 프레임 조정을 위한 시간 추가
+  clock = pygame.time.Clock()
+  
+  # 키를 받아 종료하기 전까지 글씨 올라감
+  while True:
+      # 끄면 종료됨
+      for event in pygame.event.get():
+          if event.type == pygame.QUIT:
+              pygame.quit()
+              quit()
+              
+      # 배경을 우주 이미지로 띄워줌
+      drawObject( background, 0, 0 )
+  
+      # 글씨의 위치 지정
+      for i, position in enumerate(text_positions):
+          x, y = position
+          y -= text_speed
+          text_positions[i] = (x, y)
+  
+      # 화면에 글씨 표현
+      for i, line in enumerate(text_lines):
+          text = korean_font.render(line, True, (255, 255, 255))
+          x, y = text_positions[i]
+          screen.blit(text, (x - text.get_width() // 2, y))
+  
+      # 화면 업데이트
+      pygame.display.update()
+  
+      # 화면 프레임 정해주기
+      clock.tick(60)
+      
+      # 아무키나 누르면 runMenu( ) 호
+      for event in pygame.event.get( ) :
+        if event.type in [ pygame.QUIT ] : 
+          pygame.quit( )
+          sys.exit( )
+        if event.type == pygame.KEYDOWN :  
+          runMenu( )
+          
 # 시작화면 출력
 def runMenu( ) :
     global gamePad, background
@@ -275,5 +333,5 @@ def gameOver( ) :
     writeMessage( '게임 오버!' )
   
 initGame( )
-runMenu( )
+runStory( )
 runGame( )
