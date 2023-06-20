@@ -133,8 +133,11 @@ def runGame( ) :
       y = padHeight - fighterWidth
     
     # 전투기가 운석과 충돌했는지 체크
+    """
     if ( y < ( rockY + rockHeight ) ) :
       if ( ( rockX > x ) and ( rockX < ( x + fighterWidth ) ) ) or ( ( ( rockX + rockWidth ) > x ) and ( ( rockX + rockWidth ) < ( x + fighterWidth ) ) ) :
+        """
+    if ( ( rockY + rockHeight >= y ) and ( rockY <= y + fighterHeight ) and ((rockX >= x and rockX <= x + fighterWidth) or (rockX + rockWidth >= x and rockX + rockWidth <= x + fighterWidth))) :
         crash()
     
     drawObject( fighter, x, y )  # 비행기를 게임 화면의 ( x, y ) 좌표에 그리기
