@@ -49,7 +49,7 @@ from tkinter import messagebox
 
 # 게임시작시 게임 초기화, 전역변수 선언
 def initGame( ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
+  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, gamePad, start_time
   global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
   global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy ,rocks, rock, rockA
   global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY, fighterA
@@ -73,20 +73,20 @@ def initGame( ) :
   
   pygame.display.set_caption( 'PyShooting' )  # 게임 이름
   background = pygame.image.load( './images/background1.png' )  # 배경 그림 1, 2, 3
-  background2 = background.copy()  # 움직이는 배경위한 소스추가
+  background2 = background.copy( )  # 움직이는 배경위한 소스추가
   fighter = pygame.image.load( './images/fighter3.png' ) # 전투기 그림
   missile = pygame.image.load( './images/missile.png' )  # 미사일 그림
   explosion = pygame.image.load( './images/explosion.png' )  # 폭발 그림
-  pygame.mixer.music.load('./images/music.wav')  # 배경음악
-  pygame.mixer.music.play(-1)  # 배경음악 재생
-  missileSound = pygame.mixer.Sound('./images/missile.wav')  # 미사일 사운드
-  gameOverSound = pygame.mixer.Sound('./images/gameover.wav')  # 게임 오버 사운드
+  pygame.mixer.music.load( './images/music.wav' )  # 배경음악
+  pygame.mixer.music.play( -1 )  # 배경음악 재생
+  missileSound = pygame.mixer.Sound( './images/missile.wav' )  # 미사일 사운드
+  gameOverSound = pygame.mixer.Sound( './images/gameover.wav' )  # 게임 오버 사운드
   clock = pygame.time.Clock( )
   shotCount = 0   # 점수 초기화
   background_speed = 0.2   # 배경 이동속도 
   
   missileXY = []  # 무기 좌표 리스트
-  fighterA = fighter.get_rect(centerx=padWidth //2, bottom=padHeight)
+  fighterA = fighter.get_rect(centerx = padWidth // 2, bottom = padHeight)
   # 게이지 표시
   gaugeWidth = 100
   gaugeHeight = 10
@@ -96,10 +96,10 @@ def initGame( ) :
   # 운석 랜덤 생성
   rock = pygame.image.load( random.choice( rockImage ) ) 
   rocks = []
-  rockappear = random.randint(2, 5)
-  for i in range (rockappear) :
-     rockA = rock.get_rect(left=random.randint(0, padWidth - rock.get_width()), top=-30)
-     dy = random.randint(1, 2)
+  rockappear = random.randint( 2, 5 )
+  for i in range( rockappear ) :
+     rockA = rock.get_rect(left=random.randint( 0, padWidth - rock.get_width( ) ), top = -30 )
+     dy = random.randint( 1, 2 )
      rocks.append((rockA, dy))
   rockWidth = 4
   rockHeight = 10
@@ -113,10 +113,7 @@ def initGame( ) :
 
 # 첫 화면( 시놉시스 ) 구현
 def runStory( ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy, rocks, rock, rockA
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
+  global padWidth, padHeight, background  
   
   drawObject( background, 0, 0 )  # 배경 화면 그리기
   
@@ -173,10 +170,7 @@ def runStory( ) :
           
 # 시작화면 출력
 def runMenu( ) :
-    global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-    global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-    global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy,rocks, rock, rockA
-    global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY ,fighterA
+    global padWidth, padHeight, background, background2  
     
     background = pygame.image.load( './images/background1.png' )
     background2 = pygame.image.load( './images/background1.png' )
@@ -204,7 +198,7 @@ def runMenu( ) :
           pygame.quit( )
           sys.exit( )
         if event.type == pygame.KEYDOWN :
-          start_time = time.time()
+          
           if event.key == pygame.K_k : # k 누르면 키보드 모드
             runGame_keyboard( )
           if event.key == pygame.K_m : # m 누르면 마우스 모드
@@ -214,17 +208,19 @@ def runMenu( ) :
 
 # 게임 플레이 구현
 def runGame_keyboard( ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy,rocks, rock, rockA
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY ,fighterA
-    
+  global BLACK, padWidth, padHeight, background_height, explosionSound 
+  global background, background2, fighter, missile, explosion, shotCount, background_speed
+  global gaugeWidth, gaugeHeight, gaugeX, gaugeValue, rocks 
+  global x, y, fighterX, fighterY, rock
+  
   # 움직이는 배경이미지을 위한 변수 선언
   # 화면은 Top, Left 좌표는 (0,0)로 background2_y 는 0 아래쪽 마이너스 좌표에 위치해야 함
   background_y  = 0
   background2_y = -background_height
   
   destroySound = pygame.mixer.Sound( random.choice( explosionSound ) )  # 파괴될 때마다 다른 사운드 선택
+  
+  start_time = time.time() # 게임 시간 계산을 위해 시작시간 저장
   
   onGame = False
   shotCount = 0
@@ -305,8 +301,8 @@ def runGame_keyboard( ) :
     x += fighterX
     if x < 0 :
       x = 0
-    elif x > padWidth:
-      x = padWidth
+    elif x > padWidth - 50:
+      x = padWidth - 50
     
     y += fighterY
     if y < 0 :
@@ -382,11 +378,11 @@ def runGame_keyboard( ) :
   
 # 마우스 플레이 구현
 def runGame_mouse( ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy,rocks, rock, rockA
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY ,fighterA
-    
+  global BLACK, padWidth, padHeight, background_height, explosionSound 
+  global background, background2, fighter, missile, explosion, shotCount, background_speed
+  global gaugeWidth, gaugeHeight, gaugeX, gaugeValue, rocks 
+  global x, y, fighterX, fighterY, rock
+  
   # 움직이는 배경이미지을 위한 변수 선언
   # 화면은 Top, Left 좌표는 (0,0)로 background2_y 는 0 아래쪽 마이너스 좌표에 위치해야 함
   background_y  = 0
@@ -536,11 +532,6 @@ def runGame_mouse( ) :
   pygame.quit( )  # pygame 종료
   
 def rockGen ( ) :
-    global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-    global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-    global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy,rocks, rock, rockA
-    global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY ,fighterA
-    
     #rock = pygame.image.load( random.choice( rockImage ) ) 
     rockA = rock.get_rect(left=random.randint(0, padWidth - rock.get_width()), top=-30)
     dy = random.randint(1, 2)
@@ -549,31 +540,22 @@ def rockGen ( ) :
   
 # 전투기가 운석과 충돌했을 때 메시지 출력
 def crash( ) :
-    global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-    global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-    global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-    global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY 
+    global shotCount
     
     writeMessage( '전투기 파괴!' )
     
 # 게임 오버 메시지 출력
 def gameOver( ) :
-    global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-    global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-    global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-    global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
+    global shotCount
     
     writeMessage( '게임 오버!' )
     
 # 게임 메시지 출력
 def writeMessage( text ) :
-    global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-    global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-    global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-    global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
+    global padWidth, padHeight, shotCount        
     
-    textfont = pygame.font.Font( './images/NanumGothic.ttf', 80 )
-    text = textfont.render( text, True, ( 255, 0, 0 ) )
+    textfont = pygame.font.Font( './images/NanumGothic.ttf', 40 )
+    text = textfont.render( text, True, ( 255, 255, 255 ) )
     textpos = text.get_rect( )
     textpos.center = ( padWidth / 2, padHeight / 2 )
     gamePad.blit( text, textpos )
@@ -595,52 +577,28 @@ def writeMessage( text ) :
 
 # 게임에 등장하는 객체를 드로잉
 def drawObject( obj, xx, yy ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
-  
   gamePad.blit( obj, ( xx, yy ) )
   
 #스킬게이지 표시
 def useSkill ( getgaugeValue ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
-  
   font = pygame.font.Font( './images/NanumGothic.ttf', 20 )
   text = font.render('skill gauge' , True ,(255, 255, 255) )
   gamePad.blit( text, (190,590))
   
 # 운석을 맞춘 개수 표시
-def writeScore( count ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
-  
+def writeScore( count ) :  
   font = pygame.font.Font( './images/NanumGothic.ttf', 20 )
   text = font.render( '파괴한 운석 수 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (10, 0 ) )
   
 # 운석이 화면 아래로 통과한 개수 표시
 def writePassed( count ) :
-  global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-  global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-  global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
-  
   font = pygame.font.Font( './images/NanumGothic.ttf', 20 )
   text = font.render( '놓친 운석 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (360, 0 ) )
     
 # 랭킹시스템 구현
 class GameRanking :
-    global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-    global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-    global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-    global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
     
     #클래스 멤버 변수 정의
     conn = None
@@ -657,10 +615,6 @@ class GameRanking :
     
     # 게임점수가 랭킹에 포함되는지 체크
     def checkRanking( self, gameScore ) :
-        global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-        global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-        global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-        global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
         
         rankingCnt = 5  # 보여줄 랭킹 갯수
         minScore = 0    # 랭킹순위중 가장 낮은 점수
@@ -693,10 +647,6 @@ class GameRanking :
         
     ## 함수 선언부
     def addRankingToListBox( self ) :                      
-        global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-        global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-        global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-        global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY          
         
         strData1, strData2, strData3, strData4  = [], [], [], []
         ranking = 1
@@ -731,10 +681,7 @@ class GameRanking :
     
       
 class Ranking( GameRanking ) :   
-    global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-    global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-    global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-    global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
+    
     window = None
      
     def __init__( self ) : 
@@ -747,10 +694,6 @@ class Ranking( GameRanking ) :
 
     # 저장 버튼 클릭시 호출되는 함수
     def insertRanking( self, gameScore, name ) :       
-        global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-        global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-        global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-        global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
         
         data1, data2  = "", 0
         sql = ""   
@@ -786,10 +729,6 @@ class Ranking( GameRanking ) :
         self.window.update()           
     
     def showRanking( self, gameScore ) :   
-        global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, start_time, gamePad
-        global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
-        global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1
-        global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY
         
         ## 메인 코드부  
         BLACK = "#000000"
