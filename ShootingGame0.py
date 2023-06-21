@@ -34,54 +34,6 @@
     ;
 
 """
-"""
-import threading
-import time
-
-# 
-class BackgroundThread(threading.Thread):
-    def __init__(self):
-        super(BackgroundThread, self).__init__()
-        self.daemon = True # 스레드를 데몬으로 설정하면 메인 스레드가 중지될 때 중지됩니다.
-        self.running = True # 스레드를 제어하는 ​​플래그
-
-    def run(self):
-        time_num = 0
-        while self.running:
-            # 3초마다 배경 변경 수행 ( 확인을 위해 )
-            time.sleep(3)
-            time_num += 1
-            
-            if time_num == 1 : 
-              background = pygame.image.load( './images/background0.png' )
-              background2 = background.copy()
-            elif time_num == 2 : 
-              background = pygame.image.load( './images/background2.png' )
-              background2 = background.copy()
-            elif time_num == 3 : 
-              background = pygame.image.load( './images/background0.png' )
-              background2 = background.copy()
-            else :
-              background = pygame.image.load( './images/background3.png' )
-              background2 = background.copy()
-
-    def stop(self):
-        self.running = False
-
-# 배경 변경을 위한 새 스레드 만들기
-background_thread = BackgroundThread()
-
-# 백그라운드 스레드 시작
-background_thread.start()
-
-# Run your game loop here
-#while game_running:
-    # Your game code goes here
-    # ...
-
-# 백그라운드 스레드 종료
-background_thread.stop()
-"""
 
 """* 선언부 *"""
 
@@ -122,7 +74,7 @@ def initGame( ) :
   pygame.display.set_caption( 'PyShooting' )  # 게임 이름
   background = pygame.image.load( './images/background1.png' )  # 배경 그림 1, 2, 3
   background2 = background.copy( )  # 움직이는 배경위한 소스추가
-  fighter = pygame.image.load( './images/fighter3.png' ) # 전투기 그림
+  fighter = pygame.image.load( './images/fighter-001.png' ) # 전투기 그림
   missile = pygame.image.load( './images/missile.png' )  # 미사일 그림
   explosion = pygame.image.load( './images/explosion.png' )  # 폭발 그림
   pygame.mixer.music.load( './images/music.wav' )  # 배경음악
@@ -157,11 +109,27 @@ def initGame( ) :
   fighterX = 0
   fighterY = 0
   
+  # 보스 
+  global boss, bossA, bossX, bossY ,tmpX, tmpY 
+ 
+  # 보스 좌표 이동   
+  boss = [
+           pygame.image.load( './images/Boss0.png' ), 
+           pygame.image.load( './images/Boss1.png' ),
+           pygame.image.load( './images/Boss2.png' ),
+           pygame.image.load( './images/Boss3.png' )  
+         ]  
+  bossX = padWidth * 0.45
+  bossY = padHeight * 0.1
+  tmpX = 1    # 보스 X 이동 폭
+  tmpY = 1    # 보스 y 이동 폭
+  
 """* 게임플레이 구현부 *"""
 
 # 첫 화면( 시놉시스 ) 구현
 def runStory( ) :
   global padWidth, padHeight, background  
+  
   
   drawObject( background, 0, 0 )  # 배경 화면 그리기
   
@@ -220,6 +188,7 @@ def runStory( ) :
 def runMenu( ) :
     global padWidth, padHeight, background, background2  
     
+    
     background = pygame.image.load( './images/background1.png' )
     background2 = pygame.image.load( './images/background1.png' )
     drawObject( background, 0, 0 )  # 배경 화면 그리기
@@ -260,6 +229,7 @@ def runGame_keyboard( ) :
   global background, background2, fighter, missile, explosion, shotCount, background_speed
   global gaugeWidth, gaugeHeight, gaugeX, gaugeValue, rocks 
   global x, y, fighterX, fighterY, rock
+  global mouse_x, mouse_y  # 보스용
   
   # 움직이는 배경이미지을 위한 변수 선언
   # 화면은 Top, Left 좌표는 (0,0)로 background2_y 는 0 아래쪽 마이너스 좌표에 위치해야 함
@@ -268,7 +238,7 @@ def runGame_keyboard( ) :
   
   destroySound = pygame.mixer.Sound( random.choice( explosionSound ) )  # 파괴될 때마다 다른 사운드 선택
   
-  start_time = time.time() # 게임 시간 계산을 위해 시작시간 저장
+  #start_time = time.time() # 게임 시간 계산을 위해 시작시간 저장
   
   onGame = False
   shotCount = 0
@@ -329,7 +299,7 @@ def runGame_keyboard( ) :
     #drawObject( background, 0, 0 )  
     drawObject( background,  0, background_y )
     drawObject( background2, 0, background2_y )     
-
+    """
     #게임시간이 3초가 되면 다음 화면으로 넘어감( 일단 중간에 왕 나오는 배경 3초씩 )
     gametime = int(time.time()-start_time)
     if gametime > 3 and gametime < 7 :
@@ -344,7 +314,7 @@ def runGame_keyboard( ) :
     elif gametime > 12 and gametime < 16 :
       background = pygame.image.load( './images/background3.png' )
       background2 = background.copy()
-      
+   """   
    # 비행기를 게임 화면의 ( x, y ) 좌표에 그리기
     x += fighterX
     if x < 0 :
@@ -417,10 +387,21 @@ def runGame_keyboard( ) :
     useSkill(gaugeValue) 
     pygame.display.update( )  # 게임 화면을 다시 그림
     
+    # 보스를 게임 화면의 ( x, y ) 좌표에 그리기  
+    if ( shotCount > 20 and shotCount < 40 ) :  
+        shwoBoss( "keyboard", 0, 1.0 )               
+    elif ( shotCount > 60 and shotCount < 80 ) :   
+        shwoBoss( "keyboard", 1, 1.3 )  
+    elif ( shotCount > 100  and shotCount < 120 ) :
+        shwoBoss( "keyboard", 2, 1.6 )
+    elif ( shotCount > 140 )  :
+        shwoBoss( "keyboard", 3, 1.9 )
+
+    pygame.display.update( )  # 게임 화면을 다시 그림
     
     gamePad.fill( BLACK )  # 게임 화면 ( 검은색 )
     
-    clock.tick( 80 )  # 게임화면의 초당 프레임수를 60으로 설정
+    clock.tick( 90 )  # 게임화면의 초당 프레임수를 60으로 설정
     
   pygame.quit( )  # pygame 종료
   
@@ -430,6 +411,7 @@ def runGame_mouse( ) :
   global background, background2, fighter, missile, explosion, shotCount, background_speed
   global gaugeWidth, gaugeHeight, gaugeX, gaugeValue, rocks 
   global x, y, fighterX, fighterY, rock
+  global mouse_x, mouse_y  # 보스용
   
   # 움직이는 배경이미지을 위한 변수 선언
   # 화면은 Top, Left 좌표는 (0,0)로 background2_y 는 0 아래쪽 마이너스 좌표에 위치해야 함
@@ -572,6 +554,16 @@ def runGame_mouse( ) :
     useSkill(gaugeValue) 
     pygame.display.update( )  # 게임 화면을 다시 그림
     
+    # 보스를 게임 화면의 ( x, y ) 좌표에 그리기  
+    if ( shotCount > 20 and shotCount < 40 ) :  
+        shwoBoss( "keyboard", 0, 1.0 )               
+    elif ( shotCount > 60 and shotCount < 80 ) :   
+        shwoBoss( "keyboard", 1, 1.3 )  
+    elif ( shotCount > 100  and shotCount < 120 ) :
+        shwoBoss( "keyboard", 2, 1.6 )
+    elif ( shotCount > 140 )  :
+        shwoBoss( "keyboard", 3, 1.9 )
+    
     
     gamePad.fill( BLACK )  # 게임 화면 ( 검은색 )
     
@@ -644,7 +636,41 @@ def writePassed( count ) :
   font = pygame.font.Font( './images/NanumGothic.ttf', 20 )
   text = font.render( '놓친 운석 :' + str( count ), True, ( 255, 255, 255 ) )
   gamePad.blit( text, (360, 0 ) )
+
+# 보스을 화면에 표시
+def shwoBoss( keyboardOrMouse, bossImage, bossSpeed ) :
+    global boss, bossA, bossX, bossY
+    global mouse_x, mouse_y, tmpX, tmpY
     
+    bossX += tmpX * bossSpeed
+    bossY += tmpY * bossSpeed
+
+    if bossX < 0 :
+        bossX = 0
+        tmpX = -tmpX 
+    elif bossX > ( padWidth - boss[ bossImage ].get_width() ) :
+        bossX = padWidth - boss[ bossImage ].get_width() 
+        tmpX = -tmpX           
+      
+    if bossY < 0 :
+        bossY = 0
+        tmpY = -tmpY 
+    elif bossY > ( padHeight - boss[ bossImage ].get_height() ) :
+        bossY =  padHeight - boss[ bossImage ].get_height()
+  
+        tmpY = -tmpY    
+        tmpX = -tmpX            
+    
+    bossA = boss[ bossImage ].get_rect(left=bossX, top=bossY ) 
+    drawObject( boss[ bossImage ], bossX, bossY )       
+    
+    if ( keyboardOrMouse == "keyboard" ) :
+        if ( bossA.colliderect( fighter.get_rect(left=x,top=y ) ) ) :
+            gameOver()
+    else : #  mouse 
+        if ( bossA.colliderect( fighter.get_rect( left=mouse_x, top=mouse_y ) ) ) :
+            gameOver()  
+            
 # 랭킹시스템 구현
 class GameRanking :
     
@@ -725,7 +751,37 @@ class GameRanking :
         # Connection 닫기
         self.conn.close()          
         
-        return  strData1, strData2, strData3, strData4      
+        return  strData1, strData2, strData3, strData4     
+      
+    # 랭킹순위 가져오기 
+    def getRanking( self, gameScore ) :
+        import pymysql     
+      
+        myRanking = 0    # 자신의 랭킹순위
+        
+        # MySQL Connection 연결
+        self.conn = pymysql.connect( host='localhost', user='root', password='1234', db='pythonDB', charset='utf8' )    
+         
+        # Connection 으로부터 Dictoionary Cursor 생성
+        self.curs = self.conn.cursor( pymysql.cursors.DictCursor )
+         
+        # SQL문 실행
+        sql =  " SELECT count(gr_score) ranking FROM GameRankingtbl WHERE gr_score >= %s ORDER BY gr_score desc "           
+                   
+        self.curs.execute( sql, ( gameScore ) )    # 게임점수로 순위를 가져오게 쿼리 생성  
+         
+        # 데이타 Fetch
+        rows = self.curs.fetchall()
+        for row in rows:           
+            myRanking = row['ranking']              
+       
+        # Connection 닫기
+        self.conn.close()
+     
+        if ( myRanking == 0 ) :    # 0순위이면 1순위로 변경
+            myRanking = 1            
+        
+        return myRanking  
     
       
 class Ranking( GameRanking ) :   
@@ -745,7 +801,8 @@ class Ranking( GameRanking ) :
         
         data1, data2  = "", 0
         sql = ""   
-       
+        insertOk = False           # 랭킹점수 저장후 재입력되는 것 방지 v0.3c
+        
         # entry(한줄텍스트박스)로 입력받은 값을 data 변수들에 입력       
         if ( gameScore > 0 ) :
              data2 = gameScore      # 점수           
@@ -761,27 +818,31 @@ class Ranking( GameRanking ) :
         sql = "insert into gamerankingtbl(gr_name,gr_score) values('" + name + "'," + str(data2) + ");"
         
         try :   # 예외처리 시작      
-            print( sql )
+            
             self.curs.execute( sql ) 
         except :    # 에러발생 시 작동
             messagebox.showerror('오류', '데이터 입력 오류가 발생함')
+            insertOk = False
         else :  # 에러 없을 시 작동
             messagebox.showinfo('성공', '데이터 입력 성공')
+            insertOk = True    
            
         self.conn.commit()
         self.conn.close()
        
         # 추가한 리스트 새로고침       
         self.window.destroy()
-        self.showRanking( gameScore )
+        self.showRanking( gameScore, insertOk )         # 랭킹점수 재입력 방지 v0.3c insertOk 인자 추가
         self.window.update()           
     
-    def showRanking( self, gameScore ) :   
+    # 랭킹점수 재입력 방지 v0.3c  ( 랭킹점수 추가후 insertFlag = True )
+    def showRanking( self, gameScore, insertFlag = False ) :        
         
         ## 메인 코드부  
         BLACK = "#000000"
         WHITE = "#FFFFFF"
         GRAY  = "#CCCCCC" 
+        RED   = "#FF0000"
         
         #창을 화면 중앙에 배치
         self.window = Tk()
@@ -802,7 +863,7 @@ class Ranking( GameRanking ) :
         padding_top = Label( self.window, text = "", width = 1, height = 1 )
         padding_top.grid( row = 0, column = 0, columnspan = 6 )        
                
-        if ( self.checkRanking( gameScore ) ) :       
+        if ( self.checkRanking( gameScore ) and insertFlag == False ) :             
             padding_left = Label( self.window, text = "", width = 1 )
             padding_left.grid( row = 1, column = 0 ) 
             
@@ -817,11 +878,12 @@ class Ranking( GameRanking ) :
             btnInsert.grid( row = 1, column = 3 )
             
             msg = "게임점수는 " +str( gameScore )+"점"
-            label =Label( self.window, text = msg , fg=BLACK, bg = WHITE )
+            label =Label( self.window, text = msg , fg=RED, bg = WHITE )
             label.grid( row = 1, column = 4 ) 
         else :
-            msg = "당신의 게임 점수는 " +str( gameScore )+"점입니다."
-            label =Label( self.window, text = msg , fg=BLACK, bg = WHITE )
+            msg =  "당신의 게임 순위는 [ " + str( self.getRanking( gameScore ) ) + "위 ], "
+            msg += "점수는 [ " + str( gameScore ) + "점 ] 입니다."
+            label =Label( self.window, text = msg , fg=RED, bg = WHITE )
             label.grid( row = 1, column = 0, columnspan = 5 ) 
             
         
