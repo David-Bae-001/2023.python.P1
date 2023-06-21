@@ -34,6 +34,54 @@
     ;
 
 """
+"""
+import threading
+import time
+
+# 
+class BackgroundThread(threading.Thread):
+    def __init__(self):
+        super(BackgroundThread, self).__init__()
+        self.daemon = True # 스레드를 데몬으로 설정하면 메인 스레드가 중지될 때 중지됩니다.
+        self.running = True # 스레드를 제어하는 ​​플래그
+
+    def run(self):
+        time_num = 0
+        while self.running:
+            # 3초마다 배경 변경 수행 ( 확인을 위해 )
+            time.sleep(3)
+            time_num += 1
+            
+            if time_num == 1 : 
+              background = pygame.image.load( './images/background0.png' )
+              background2 = background.copy()
+            elif time_num == 2 : 
+              background = pygame.image.load( './images/background2.png' )
+              background2 = background.copy()
+            elif time_num == 3 : 
+              background = pygame.image.load( './images/background0.png' )
+              background2 = background.copy()
+            else :
+              background = pygame.image.load( './images/background3.png' )
+              background2 = background.copy()
+
+    def stop(self):
+        self.running = False
+
+# 배경 변경을 위한 새 스레드 만들기
+background_thread = BackgroundThread()
+
+# 백그라운드 스레드 시작
+background_thread.start()
+
+# Run your game loop here
+#while game_running:
+    # Your game code goes here
+    # ...
+
+# 백그라운드 스레드 종료
+background_thread.stop()
+"""
 
 """* 선언부 *"""
 
