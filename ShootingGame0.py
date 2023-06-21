@@ -52,7 +52,7 @@ def initGame( ) :
   global BLACK, padWidth, padHeight, background_height, rockImage, explosionSound, screen, gamePad, start_time
   global background, background2, fighter, missile, explosion, missileSound, gameOverSound, clock, shotCount, background_speed
   global missileXY, gaugeWidth, gaugeHeight, gaugeX, gaugeY, gaugeValue, rock, rockSize, rockWidth, rockHeight, rock1, rockSize1, dy ,rocks, rock, rockA
-  global rockX, rockX1, rockY, rockSpeed, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY, fighterA
+  global rockX, rockX1, rockY, rockSpeed, dx, rockAngle, rockDirection, fighterSize, fighterWidth, fighterHeight, x, y, fighterX, fighterY, fighterA
   
   pygame.init( )
   
@@ -96,13 +96,15 @@ def initGame( ) :
   # 운석 랜덤 생성
   rock = pygame.image.load( random.choice( rockImage ) ) 
   rocks = []
-  rockappear = random.randint( 2, 5 )
+  rockfreq = 5 # 운석 떨어지는 빈도수 점수에 따라 수정
+  rockappear = random.randint( 2, rockfreq ) 
   for i in range( rockappear ) :
      rockA = rock.get_rect(left=random.randint( 0, padWidth - rock.get_width( ) ), top = -30 )
-     dy = random.randint( 1, 2 )
+     dy = random.randint( 1, rockfreq )
      rocks.append((rockA, dy))
   rockWidth = 4
   rockHeight = 10
+  dx = random.randint(1,2) # 운석 좌우 움직임
   # 전투기 초기 위치( x, y )
   x = padWidth * 0.45
   y = padHeight * 0.9
@@ -128,7 +130,7 @@ def initGame( ) :
 
 # 첫 화면( 시놉시스 ) 구현
 def runStory( ) :
-  global padWidth, padHeight, background  
+  global padWidth, padHeight, background
   
   
   drawObject( background, 0, 0 )  # 배경 화면 그리기
@@ -186,7 +188,7 @@ def runStory( ) :
           
 # 시작화면 출력
 def runMenu( ) :
-    global padWidth, padHeight, background, background2  
+    global padWidth, padHeight, background, background2
     
     
     background = pygame.image.load( './images/background1.png' )
@@ -228,7 +230,7 @@ def runGame_keyboard( ) :
   global BLACK, padWidth, padHeight, background_height, explosionSound 
   global background, background2, fighter, missile, explosion, shotCount, background_speed
   global gaugeWidth, gaugeHeight, gaugeX, gaugeValue, rocks 
-  global x, y, fighterX, fighterY, rock
+  global x, y, fighterX, fighterY, rock, dx, rockfreq  
   global mouse_x, mouse_y  # 보스용
   
   # 움직이는 배경이미지을 위한 변수 선언
@@ -266,13 +268,12 @@ def runGame_keyboard( ) :
           if gaugeValue == 100 :
             shotCount += len(rocks)
             rocks = []
-            rockappear = random.randint(2, 5)
+            rockappear = random.randint(2, rockfreq)
             for i in range (rockappear) :
                rockA = rock.get_rect(left=random.randint(0, padWidth - rock.get_width()), top=-30)
                dy = random.randint(1, 2)
                rocks.append((rockA, dy))
-            rockWidth = 4
-            rockHeight = 10
+            
             gaugeValue = 0
 
           else :
@@ -288,6 +289,10 @@ def runGame_keyboard( ) :
     # 움직이는 배경 화면 좌표값 변경 
     background_y  += background_speed
     background2_y += background_speed
+    
+    #ingame에서 운석 수 변경 
+    if shotCount > 15 :
+        rockfreq = 7
     
     if ( background_y == background_height ) :
         background_y =  -background_height
@@ -329,14 +334,13 @@ def runGame_keyboard( ) :
       y = padHeight-30
       
     #운석 그리기
-    rockAngle = 0
-    rockAngle += 1  # 추가: 운석의 회전 속도
-    if rockAngle >= 360:
-        rockAngle = 0
+    
 
     for rockA, dy in rocks:
-        rockA.top += dy
+        rockA.top += dy * 0.7 #빠른 것 같아 느리게 
+        rockA.left += dx * 0.7 # 운석 x축 움직임 추
         if rockA.top > padHeight:
+            rocks.remove((rockA,dy)) # 운석 하나 떨어지면 게임오버 수정
             rockGen()
             rockPassed += 1
             
@@ -368,6 +372,13 @@ def runGame_keyboard( ) :
         
     for rockA, dy in rocks:
       gamePad.blit(rock, rockA)
+    
+      if rockA.left < 0 : # 운석 좌우 움직임 제한 
+          dx = -dx
+          #생성된 rock이 화면 오른쪽에 부딪힐 때
+      elif rockA.left > ( padWidth - rock.get_width() ) :
+          rockA.left = padWidth - rock.get_width() 
+          dx = -dx
       
     for missileA in missileXY:
       gamePad.blit(missile, missileA)
@@ -385,7 +396,7 @@ def runGame_keyboard( ) :
     
     pygame.draw.rect(gamePad, (0, 255, 0), (gaugeX, gaugeY, gaugeWidth * (gaugeValue / 100), gaugeHeight), border_radius=50)  # Green gauge bar based on gaugeValue
     useSkill(gaugeValue) 
-    pygame.display.update( )  # 게임 화면을 다시 그림
+    #pygame.display.update( )  # 게임 화면을 다시 그림
     
     # 보스를 게임 화면의 ( x, y ) 좌표에 그리기  
     if ( shotCount > 20 and shotCount < 40 ) :  
@@ -410,7 +421,7 @@ def runGame_mouse( ) :
   global BLACK, padWidth, padHeight, background_height, explosionSound 
   global background, background2, fighter, missile, explosion, shotCount, background_speed
   global gaugeWidth, gaugeHeight, gaugeX, gaugeValue, rocks 
-  global x, y, fighterX, fighterY, rock
+  global x, y, fighterX, fighterY, rock, dx, rockfreq  
   global mouse_x, mouse_y  # 보스용
   
   # 움직이는 배경이미지을 위한 변수 선언
@@ -446,19 +457,22 @@ def runGame_mouse( ) :
             if gaugeValue == 100 :
               shotCount += len(rocks)
               rocks = []
-              rockappear = random.randint(2, 5)
+              rockappear = random.randint(2, rockfreq)
               for i in range (rockappear) :
                  rockA = rock.get_rect(left=random.randint(0, padWidth - rock.get_width()), top=-30)
                  dy = random.randint(1, 2)
                  rocks.append((rockA, dy))
-              rockWidth = 4
-              rockHeight = 10
+              
               gaugeValue = 0
 
 
     # 움직이는 배경 화면 좌표값 변경 
     background_y  += background_speed
     background2_y += background_speed
+    
+    #ingame에서 운석 수 변경 
+    if shotCount > 15 :
+        rockfreq = 7
     
     if ( background_y == background_height ) :
         background_y =  -background_height
@@ -495,8 +509,10 @@ def runGame_mouse( ) :
 
 
     for rockA, dy in rocks:
-        rockA.top += dy
+        rockA.top += dy * 0.7 #빠른 것 같아 느리게 
+        rockA.left += dx * 0.7 # 운석 x축 움직임 추
         if rockA.top > padHeight:
+            rocks.remove((rockA,dy)) # 운석 하나 떨어지면 게임오버 수정
             rockGen()
             rockPassed += 1
             
@@ -531,7 +547,14 @@ def runGame_mouse( ) :
         
     for rockA, dy in rocks:
       gamePad.blit(rock, rockA)
-      
+    
+      if rockA.left < 0 : # 운석 좌우 움직임 제한 
+          dx = -dx
+          #생성된 rock이 화면 오른쪽에 부딪힐 때
+      elif rockA.left > ( padWidth - rock.get_width() ) :
+          rockA.left = padWidth - rock.get_width() 
+          dx = -dx
+          
     for missileA in missileXY:
       gamePad.blit(missile, missileA)
 
@@ -552,7 +575,7 @@ def runGame_mouse( ) :
     
     pygame.draw.rect(gamePad, (0, 255, 0), (gaugeX, gaugeY, gaugeWidth * (gaugeValue / 100), gaugeHeight), border_radius=50)  # Green gauge bar based on gaugeValue
     useSkill(gaugeValue) 
-    pygame.display.update( )  # 게임 화면을 다시 그림
+    #pygame.display.update( )  # 게임 화면을 다시 그림
     
     # 보스를 게임 화면의 ( x, y ) 좌표에 그리기  
     if ( shotCount > 20 and shotCount < 40 ) :  
@@ -563,6 +586,8 @@ def runGame_mouse( ) :
         shwoBoss( "keyboard", 2, 1.6 )
     elif ( shotCount > 140 )  :
         shwoBoss( "keyboard", 3, 1.9 )
+        
+    pygame.display.update( )  # 게임 화면을 다시 그림
     
     
     gamePad.fill( BLACK )  # 게임 화면 ( 검은색 )
